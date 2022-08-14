@@ -19,8 +19,9 @@
 # =================================================================================
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.response import Response
-from blog.models import Post, Comment
-from .serializers import CommentSerializer, PostListSerializer, PostRetrieveSerializer, PostLikeSerializer
+from rest_framework.views import APIView
+from blog.models import Post, Comment, Category, Tag
+from .serializers import CateTagSerializer, CommentSerializer, PostListSerializer, PostRetrieveSerializer, PostLikeSerializer
 
 class PostListAPIView(ListAPIView):
   queryset = Post.objects.all()
@@ -56,3 +57,23 @@ class PostLikeAPIView(UpdateAPIView):
 
         # return Response(serializer.data)
         return Response(data['like'])
+
+# Category와 Tag 두 테이블 모두를 가져와서 사용 -> APIView 또는 GenericAPIView 사용!
+# Generic View들은 모두 하나의 테이블을 대상으로 처리하는 View**
+class CateTagAPIView(APIView):
+  # 직렬화(serialize) 방향: 테이블 -> serialize -> response
+  def get(self, request, *args, **kwargs):
+    # 1. 테이블
+    cateList = Category.objects.all()
+    tagList = Tag.objects.all()
+    # 1-1. serializer에 넘겨줄 data 구성(중요: key와 필드명 일치!)**
+    data = {
+      'cateList' : cateList,
+      'tagList' : tagList,
+    }
+    # 2. serialize
+    serializer = CateTagSerializer(instance=data)
+    # 3. response
+    return Response(serializer.data)
+
+
