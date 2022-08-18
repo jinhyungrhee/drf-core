@@ -10,12 +10,17 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'username', 'email', 'is_staff']
 
 class PostListSerializer(serializers.ModelSerializer):
+    # category = serializers.CharField(source='category.name')
+    category = serializers.ReadOnlyField(source='category.name')
     class Meta:
         model = Post
         # fields = '__all__'
         fields = ['id', 'title', 'image', 'like', 'category']
 
 class PostRetrieveSerializer(serializers.ModelSerializer):
+    # 기존의 필드를 오버라이딩하여 사용
+    category = serializers.StringRelatedField()
+    tags = serializers.StringRelatedField(many=True)
     class Meta:
         model = Post
         # fields = '__all__'
@@ -56,5 +61,23 @@ class CateTagSerializer(serializers.Serializer):
     cateList = serializers.ListField(child=serializers.CharField())
     tagList = serializers.ListField(child=serializers.CharField())
 
+# =============== PostDetail =======================================
+class PostSerializerSub(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ['id', 'title']
+
+class CommentSerializerSub(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'content', 'update_dt']
+
+
+# 일반 serializer 상속 -> 키(필드)를 직접 설정하는 경우
+class PostSerializerDetail(serializers.Serializer):
+    post = PostRetrieveSerializer()
+    prevPost = PostSerializerSub() # id와 title만 가져옴
+    nextPost = PostSerializerSub() # id와 title만 가져옴
+    commentList = CommentSerializerSub(many=True) # 일부 필드만 사용하는 serializer('id', 'content', 'update_dt')
 
 
